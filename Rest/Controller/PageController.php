@@ -1106,7 +1106,7 @@ class PageController extends AbstractRestController
                     throw new BadRequestHttpException('Can\'t create children of ' . $parent->getLayout()->getLabel() . ' layout');
                 }
 
-                $this->moveAsFirstChildOf($page, $parent);
+                $this->moveAsLastChildOf($page, $parent);
             }
         } catch (InvalidArgumentException $e) {
             throw new BadRequestHttpException('Invalid node move action: '.$e->getMessage());
@@ -1134,6 +1134,29 @@ class PageController extends AbstractRestController
         }
 
         $this->getPageRepository()->moveAsFirstChildOf($page, $parent);
+    }
+
+    /**
+     * Moves $page as last child of $parent
+     *
+     * @param Page      $page
+     * @param Page|null $parent
+     *
+     * @throws BadRequestHttpException Raises if $parent is null
+     */
+    private function moveAsLastChildOf(Page $page, Page $parent = null)
+    {
+        if (null === $parent) {
+            throw new BadRequestHttpException('Parent uid doesn\'t exists');
+        }
+
+        $this->granted('EDIT', $parent);
+
+        if (!$parent->hasMainSection()) {
+            $this->getPageRepository()->saveWithSection($parent);
+        }
+
+        $this->getPageRepository()->moveAsLastChildOf($page, $parent);
     }
 
     /**
